@@ -5,22 +5,33 @@ export async function getProfile(): Promise<ProfileData | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
 
-  const { data, error } = await supabase
+  // First check if profiles table exists
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select(`
-      *,
-      links:links(*),
-      socials:socials(*)
-    `)
-    .eq("links.is_active", true)
-    .order("sort_order", { foreignTable: "links" })
-    .order("sort_order", { foreignTable: "socials" })
+    .select("*")
+    .limit(1)
     .single();
 
-  if (error) {
-    console.error("Error fetching profile:", error);
-    return null;
-  }
+  if (profileError || !profile) return null;
 
-  return data;
+  // Fetch links separately (handles missing table gracefully)
+  const { data: links } = await supabase
+    .from("links")
+    .select("*")
+    .eq("profile_id", profile.id)
+    .eq("is_active", true)
+    .order("sort_order");
+
+  // Fetch socials separately
+  const { data: socials } = await supabase
+    .from("socials")
+    .select("*")
+    .eq("profile_id", profile.id)
+    .order("sort_order");
+
+  return {
+    ...profile,
+    links: links || [],
+    socials: socials || [],
+  };
 }
