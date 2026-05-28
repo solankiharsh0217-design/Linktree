@@ -212,9 +212,14 @@ export default function AdminForm() {
           selected_variant: profile.selected_variant || "cloud",
         }),
       });
-      const data = await res.json();
-      if (data.error) setMessage(`Error: ${data.error}`);
-      else setMessage("Profile saved!");
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (data.error) setMessage(`Error: ${data.error}`);
+        else setMessage("Profile saved!");
+      } catch {
+        setMessage(`Error: Server returned non-JSON (${res.status}): ${text.slice(0, 200)}`);
+      }
     } catch (e) { setMessage(`Failed: ${e instanceof Error ? e.message : "unknown"}`); }
     setSaving(false);
   }, [profile, session]);
