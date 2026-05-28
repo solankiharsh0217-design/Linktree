@@ -33,9 +33,6 @@ const FALLBACK: ProfileData = {
   ],
 };
 
-const SCALLOP_MASK =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 8 Q 2.5 4 5 8 T 10 8 T 15 8 T 20 8 T 25 8 T 30 8 T 35 8 T 40 8 T 45 8 T 50 8 T 55 8 T 60 8 T 65 8 T 70 8 T 75 8 T 80 8 T 85 8 T 90 8 T 95 8 T 100 8 V 92 Q 97.5 96 95 92 T 90 92 T 85 92 T 80 92 T 75 92 T 70 92 T 65 92 T 60 92 T 55 92 T 50 92 T 45 92 T 40 92 T 35 92 T 30 92 T 25 92 T 20 92 T 15 92 T 10 92 T 5 92 T 0 92 Z' fill='black'/%3E%3C/svg%3E";
-
 function LinkButton({
   link,
   delay,
@@ -51,15 +48,7 @@ function LinkButton({
       className="group relative w-full animate-fade-in-up"
       style={{ animationDelay: delay, animationFillMode: "both" }}
     >
-      <div
-        className="relative w-full bg-white/95 backdrop-blur-sm text-black shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center h-[5.5rem] px-6 gap-5 overflow-hidden"
-        style={{
-          maskImage: `url("${SCALLOP_MASK}")`,
-          maskSize: "100% 100%",
-          WebkitMaskImage: `url("${SCALLOP_MASK}")`,
-          WebkitMaskSize: "100% 100%",
-        }}
-      >
+      <div className="relative w-full bg-white/95 backdrop-blur-sm text-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center h-[5.5rem] px-6 gap-5 overflow-hidden">
         {/* Logo / Icon */}
         <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
           {link.thumbnail_url ? (
