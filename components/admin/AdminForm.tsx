@@ -229,17 +229,35 @@ export default function AdminForm() {
     setSaving(true); setMessage("");
     try {
       let hasError = false;
-      for (const link of profile.links) {
+      const updatedLinks = [...profile.links];
+      for (let i = 0; i < profile.links.length; i++) {
+        const link = profile.links[i];
+        const isNew = link.id.startsWith("new-");
+        
         const res = await fetch("/api/links", {
-          method: "PUT",
+          method: isNew ? "POST" : "PUT",
           headers: { "Content-Type": "application/json", ...getAuthHeaders(session) },
-          body: JSON.stringify(link),
+          body: JSON.stringify(isNew ? { ...link, id: undefined } : link),
         });
+        
         const data = await res.json();
-        if (data.error) { setMessage(`Error: ${data.error}`); hasError = true; break; }
+        if (data.error) {
+          setMessage(`Error: ${data.error}`);
+          hasError = true;
+          break;
+        }
+        
+        if (isNew) {
+          updatedLinks[i] = data;
+        }
       }
+      
+      setProfile({ ...profile, links: updatedLinks });
       if (!hasError) setMessage("Links saved!");
-    } catch { setMessage("Failed to save links."); }
+    } catch (e) {
+      console.error("Save links error:", e);
+      setMessage("Failed to save links.");
+    }
     setSaving(false);
   }, [profile, session]);
 
@@ -248,17 +266,35 @@ export default function AdminForm() {
     setSaving(true); setMessage("");
     try {
       let hasError = false;
-      for (const social of profile.socials) {
+      const updatedSocials = [...profile.socials];
+      for (let i = 0; i < profile.socials.length; i++) {
+        const social = profile.socials[i];
+        const isNew = social.id.startsWith("new-");
+        
         const res = await fetch("/api/socials", {
-          method: "PUT",
+          method: isNew ? "POST" : "PUT",
           headers: { "Content-Type": "application/json", ...getAuthHeaders(session) },
-          body: JSON.stringify(social),
+          body: JSON.stringify(isNew ? { ...social, id: undefined } : social),
         });
+        
         const data = await res.json();
-        if (data.error) { setMessage(`Error: ${data.error}`); hasError = true; break; }
+        if (data.error) {
+          setMessage(`Error: ${data.error}`);
+          hasError = true;
+          break;
+        }
+        
+        if (isNew) {
+          updatedSocials[i] = data;
+        }
       }
+      
+      setProfile({ ...profile, socials: updatedSocials });
       if (!hasError) setMessage("Socials saved!");
-    } catch { setMessage("Failed to save socials."); }
+    } catch (e) {
+      console.error("Save socials error:", e);
+      setMessage("Failed to save socials.");
+    }
     setSaving(false);
   }, [profile, session]);
 
@@ -270,9 +306,37 @@ export default function AdminForm() {
     }]});
   };
 
-  const removeLink = (id: string) => {
-    if (!profile) return;
+  const removeLink = async (id: string) => {
+    if (!profile || !session) return;
+    
+    // If it's a new link, just remove from state
+    if (id.startsWith("new-")) {
+      setProfile({ ...profile, links: profile.links.filter((l) => l.id !== id) });
+      return;
+    }
+
+    // Existing link: immediate delete with optimistic UI
+    const previousProfile = { ...profile };
     setProfile({ ...profile, links: profile.links.filter((l) => l.id !== id) });
+    setMessage("Deleting link...");
+
+    try {
+      const res = await fetch(`/api/links?id=${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(session),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setProfile(previousProfile);
+        setMessage(`Error deleting: ${data.error}`);
+      } else {
+        setMessage("Link deleted.");
+      }
+    } catch (e) {
+      console.error("Delete link error:", e);
+      setProfile(previousProfile);
+      setMessage("Failed to delete link.");
+    }
   };
 
   const updateLink = (id: string, field: keyof LinkType, value: string | number | boolean | null) => {
@@ -288,9 +352,37 @@ export default function AdminForm() {
     }]});
   };
 
-  const removeSocial = (id: string) => {
-    if (!profile) return;
+  const removeSocial = async (id: string) => {
+    if (!profile || !session) return;
+    
+    // If it's a new social, just remove from state
+    if (id.startsWith("new-")) {
+      setProfile({ ...profile, socials: profile.socials.filter((s) => s.id !== id) });
+      return;
+    }
+
+    // Existing social: immediate delete with optimistic UI
+    const previousProfile = { ...profile };
     setProfile({ ...profile, socials: profile.socials.filter((s) => s.id !== id) });
+    setMessage("Deleting social...");
+
+    try {
+      const res = await fetch(`/api/socials?id=${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(session),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setProfile(previousProfile);
+        setMessage(`Error deleting: ${data.error}`);
+      } else {
+        setMessage("Social deleted.");
+      }
+    } catch (e) {
+      console.error("Delete social error:", e);
+      setProfile(previousProfile);
+      setMessage("Failed to delete social.");
+    }
   };
 
   const updateSocial = (id: string, field: keyof Social, value: string | number) => {

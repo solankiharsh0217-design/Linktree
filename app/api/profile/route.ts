@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabase } from "@/lib/supabase";
 import { requireAuth } from "@/lib/supabase-server";
 
 function sanitize(str: unknown): string {
@@ -8,10 +7,14 @@ function sanitize(str: unknown): string {
 }
 
 export async function GET() {
-  try {
-    const supabase = getSupabase();
-    if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  const { createClient } = await import("@supabase/supabase-js");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !key) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  const supabase = createClient(url, key);
 
+  try {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -42,8 +45,8 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const auth = await requireAuth(req);
-    if (auth.error) {
-      return NextResponse.json({ error: auth.error }, { status: 401 });
+    if (auth.error || !auth.supabase) {
+      return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 });
     }
 
     let body: Record<string, unknown>;
@@ -65,10 +68,7 @@ export async function PUT(req: NextRequest) {
       updates.selected_variant = ["cloud", "athletic"].includes(v) ? v : "cloud";
     }
 
-    const supabase = getSupabase();
-    if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
-
-    const { data, error } = await supabase
+    const { data, error } = await auth.supabase
       .from("profiles")
       .update(updates)
       .eq("id", id)
