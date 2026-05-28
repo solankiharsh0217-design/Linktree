@@ -7,6 +7,15 @@ function sanitize(str: unknown): string {
   return str.replace(/[<>"'&]/g, "").trim().slice(0, 500);
 }
 
+function validateUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return ["http:", "https:"].includes(u.protocol);
+  } catch {
+    return false;
+  }
+}
+
 export async function GET() {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
@@ -36,7 +45,9 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (auth.error) return NextResponse.json({ error: auth.error }, { status: 401 });
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: 401 });
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -53,9 +64,16 @@ export async function PUT(req: NextRequest) {
   const updates: Record<string, string> = {};
   if (name !== undefined) updates.name = sanitize(name);
   if (subtitle !== undefined) updates.subtitle = sanitize(subtitle);
-  if (image_url !== undefined) updates.image_url = sanitize(image_url);
+  if (image_url !== undefined) {
+    const url = sanitize(image_url);
+    if (url && !validateUrl(url)) {
+      return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+    }
+    updates.image_url = url;
+  }
   updates.updated_at = new Date().toISOString();
 
+  // Use the auth.supabase which has the user's JWT in headers — RLS sees auth.uid()
   const { data, error } = await auth.supabase!
     .from("profiles")
     .update(updates)
@@ -63,6 +81,9 @@ export async function PUT(req: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Profile update error:", error);
+    return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
+  }
   return NextResponse.json(data);
 }

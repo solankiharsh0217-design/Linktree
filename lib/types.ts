@@ -10,6 +10,7 @@ export interface Link {
   id: string;
   profile_id: string;
   label: string;
+  subtitle?: string;
   url: string;
   icon: string | null;
   thumbnail_url: string | null;

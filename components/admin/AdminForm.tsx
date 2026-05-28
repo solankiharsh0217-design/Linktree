@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, GripVertical, Save, Eye, LogOut, LogIn, Lock } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Plus, Trash2, GripVertical, Save, Eye, LogOut, LogIn, Lock, Upload, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import type { ProfileData, Link as LinkType, Social } from "@/lib/types";
@@ -10,6 +10,91 @@ import type { Session } from "@supabase/supabase-js";
 function getAuthHeaders(session: Session | null): Record<string, string> {
   if (!session) return {};
   return { Authorization: `Bearer ${session.access_token}` };
+}
+
+async function uploadFile(file: File, session: Session, bucket = "images", folder = "uploads"): Promise<string | null> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("bucket", bucket);
+  formData.append("folder", folder);
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: getAuthHeaders(session),
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (data.error) return null;
+  return data.url;
+}
+
+function ImageUpload({
+  currentUrl,
+  onUpload,
+  label,
+  session,
+  size = "md",
+}: {
+  currentUrl: string;
+  onUpload: (url: string) => void;
+  label: string;
+  session: Session;
+  size?: "sm" | "md";
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const url = await uploadFile(file, session, "images", "uploads");
+    if (url) onUpload(url);
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const dim = size === "sm" ? "w-10 h-10" : "w-16 h-16";
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`${dim} rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center`}>
+        {currentUrl ? (
+          <img src={currentUrl} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <ImageIcon className="w-5 h-5 text-gray-300" />
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
+        >
+          <Upload className="w-3 h-3" />
+          {uploading ? "Uploading..." : "Upload image"}
+        </button>
+        {currentUrl && (
+          <button
+            type="button"
+            onClick={() => onUpload("")}
+            className="text-xs text-gray-400 hover:text-red-500"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminForm() {
@@ -25,7 +110,6 @@ export default function AdminForm() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Check for existing session on mount
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,7 +124,6 @@ export default function AdminForm() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch profile when session is available
   useEffect(() => {
     if (!session) return;
 
@@ -71,16 +154,11 @@ export default function AdminForm() {
 
     try {
       const supabase = getSupabaseBrowser();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setLoginError(error.message);
         setLoginLoading(false);
       }
-      // Session will be set by onAuthStateChange listener → triggers profile fetch
     } catch {
       setLoginError("Network error. Try again.");
       setLoginLoading(false);
@@ -91,9 +169,7 @@ export default function AdminForm() {
     try {
       const supabase = getSupabaseBrowser();
       await supabase.auth.signOut();
-    } catch {
-      // Ignore logout errors
-    }
+    } catch {}
     setSession(null);
     setProfile(null);
     setEmail("");
@@ -116,7 +192,7 @@ export default function AdminForm() {
         }),
       });
       const data = await res.json();
-      if (data.error) setMessage(data.error);
+      if (data.error) setMessage(`Error: ${data.error}`);
       else setMessage("Profile saved!");
     } catch {
       setMessage("Failed to save profile.");
@@ -138,7 +214,7 @@ export default function AdminForm() {
         });
         const data = await res.json();
         if (data.error) {
-          setMessage(data.error);
+          setMessage(`Error: ${data.error}`);
           hasError = true;
           break;
         }
@@ -164,7 +240,7 @@ export default function AdminForm() {
         });
         const data = await res.json();
         if (data.error) {
-          setMessage(data.error);
+          setMessage(`Error: ${data.error}`);
           hasError = true;
           break;
         }
@@ -268,9 +344,7 @@ export default function AdminForm() {
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
 
-              {loginError && (
-                <p className="text-xs text-red-500 text-center">{loginError}</p>
-              )}
+              {loginError && <p className="text-xs text-red-500 text-center">{loginError}</p>}
 
               <button
                 type="submit"
@@ -289,7 +363,6 @@ export default function AdminForm() {
     );
   }
 
-  // ========== LOADING ==========
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -298,7 +371,6 @@ export default function AdminForm() {
     );
   }
 
-  // ========== NO DATA ==========
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -326,7 +398,7 @@ export default function AdminForm() {
       <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <h1 className="font-semibold text-gray-800">Admin</h1>
         <div className="flex items-center gap-3">
-          {message && <span className="text-xs text-gray-500">{message}</span>}
+          {message && <span className={`text-xs ${message.startsWith("Error") ? "text-red-500" : "text-gray-500"}`}>{message}</span>}
           <Link href="/cloud" className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
             <Eye className="w-3 h-3" /> Cloud
           </Link>
@@ -352,6 +424,14 @@ export default function AdminForm() {
               <Save className="w-3 h-3" /> Save
             </button>
           </div>
+
+          <ImageUpload
+            currentUrl={profile.image_url}
+            onUpload={(url) => setProfile({ ...profile, image_url: url })}
+            label="Profile image"
+            session={session}
+          />
+
           <div className="space-y-3">
             <input
               type="text"
@@ -371,7 +451,7 @@ export default function AdminForm() {
               type="url"
               value={profile.image_url}
               onChange={(e) => setProfile({ ...profile, image_url: e.target.value })}
-              placeholder="Profile image URL"
+              placeholder="Or paste image URL"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
@@ -413,6 +493,15 @@ export default function AdminForm() {
                     placeholder="URL"
                     className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
+
+                  <ImageUpload
+                    currentUrl={link.thumbnail_url || ""}
+                    onUpload={(url) => updateLink(link.id, "thumbnail_url", url || null)}
+                    label={`${link.label} thumbnail`}
+                    session={session}
+                    size="sm"
+                  />
+
                   <div className="flex items-center gap-2">
                     <select
                       value={link.icon || ""}
