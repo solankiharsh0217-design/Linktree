@@ -37,7 +37,6 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth.error) {
-    console.error("Auth error:", auth.error);
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
 
@@ -45,19 +44,16 @@ export async function PUT(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { id, name, subtitle, image_url } = body;
-  if (!id || typeof id !== "string") {
-    return NextResponse.json({ error: "Missing profile id" }, { status: 400 });
-  }
+  const { id, ...updates } = body;
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const updates: Record<string, string> = {};
-  if (name !== undefined) updates.name = sanitize(name);
-  if (subtitle !== undefined) updates.subtitle = sanitize(subtitle);
-  if (image_url !== undefined) updates.image_url = sanitize(image_url);
-  updates.updated_at = new Date().toISOString();
+  // Sanitize string fields
+  if (updates.name !== undefined) updates.name = sanitize(updates.name);
+  if (updates.subtitle !== undefined) updates.subtitle = sanitize(updates.subtitle);
+  if (updates.image_url !== undefined) updates.image_url = sanitize(updates.image_url);
 
   const { data, error } = await auth.supabase!
     .from("profiles")
@@ -67,11 +63,8 @@ export async function PUT(req: NextRequest) {
     .single();
 
   if (error) {
-    console.error("Profile update DB error:", JSON.stringify(error));
-    return NextResponse.json(
-      { error: `DB error: ${error.message} (code: ${error.code})` },
-      { status: 500 }
-    );
+    console.error("Profile update error:", JSON.stringify(error));
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
   }
   return NextResponse.json(data);
 }
