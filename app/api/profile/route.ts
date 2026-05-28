@@ -35,7 +35,6 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  // Verify the user is logged in
   const auth = await requireAuth(req);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -48,19 +47,19 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { id, ...updates } = body;
+  const { id } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  // Sanitize string fields
-  if (updates.name !== undefined) updates.name = sanitize(updates.name);
-  if (updates.subtitle !== undefined) updates.subtitle = sanitize(updates.subtitle);
-  if (updates.image_url !== undefined) updates.image_url = sanitize(updates.image_url);
-  if (updates.selected_variant !== undefined) {
-    const v = sanitize(updates.selected_variant);
+  // Only pick known profile fields — don't spread the entire body
+  const updates: Record<string, string> = {};
+  if (body.name !== undefined) updates.name = sanitize(body.name);
+  if (body.subtitle !== undefined) updates.subtitle = sanitize(body.subtitle);
+  if (body.image_url !== undefined) updates.image_url = sanitize(body.image_url);
+  if (body.selected_variant !== undefined) {
+    const v = sanitize(body.selected_variant);
     updates.selected_variant = ["cloud", "athletic"].includes(v) ? v : "cloud";
   }
 
-  // Use the public client (bypasses RLS) since the route is already auth-protected
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
 
