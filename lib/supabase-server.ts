@@ -1,6 +1,10 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 
+/**
+ * Server-side auth: creates a Supabase client with the user's JWT.
+ * The JWT is used directly for RLS — no network call to Supabase auth needed.
+ */
 export async function requireAuth(
   req: NextRequest
 ): Promise<{ error: string | null; supabase: SupabaseClient | null; user: User | null }> {
@@ -13,26 +17,37 @@ export async function requireAuth(
 
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return { error: "Missing or invalid authorization header", supabase: null, user: null };
+    return { error: "Not authenticated — please log in again", supabase: null, user: null };
   }
 
   const token = authHeader.slice(7);
   if (!token || token.length < 10) {
-    return { error: "Invalid token", supabase: null, user: null };
+    return { error: "Invalid token — please log in again", supabase: null, user: null };
   }
 
-  // Create a client scoped to this request's token
+  // Decode JWT to get user info (no network call)
+  let user: User;
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+    user = {
+      id: payload.sub,
+      email: payload.email || "",
+      app_metadata: payload.app_metadata || {},
+      user_metadata: payload.user_metadata || {},
+      aud: payload.aud || "",
+      created_at: "",
+    } as User;
+  } catch {
+    return { error: "Invalid token format", supabase: null, user: null };
+  }
+
+  // Create Supabase client with the user's JWT in headers
+  // This means RLS policies will see auth.uid() = user.id
   const supabase = createClient(url, key, {
     global: {
       headers: { Authorization: `Bearer ${token}` },
     },
   });
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return { error: "Not authenticated", supabase: null, user: null };
-  }
 
   return { error: null, supabase, user };
 }

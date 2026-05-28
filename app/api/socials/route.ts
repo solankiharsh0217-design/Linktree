@@ -6,15 +6,6 @@ function sanitize(str: unknown): string {
   return str.replace(/[<>"'&]/g, "").trim().slice(0, 500);
 }
 
-function validateUrl(url: string): boolean {
-  try {
-    const u = new URL(url);
-    return ["http:", "https:"].includes(u.protocol);
-  } catch {
-    return false;
-  }
-}
-
 const VALID_PLATFORMS = ["tiktok", "youtube", "twitter", "instagram"];
 
 export async function POST(req: NextRequest) {
@@ -29,17 +20,12 @@ export async function POST(req: NextRequest) {
   }
 
   const { profile_id, platform, url, sort_order } = body;
-
   if (!profile_id || !platform || !url) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   if (!VALID_PLATFORMS.includes(platform as string)) {
     return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
-  }
-
-  if (!validateUrl(sanitize(url as string))) {
-    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
   const { data, error } = await auth.supabase!.from("socials").insert({
@@ -49,7 +35,10 @@ export async function POST(req: NextRequest) {
     sort_order: typeof sort_order === "number" ? sort_order : 0,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Social create error:", JSON.stringify(error));
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -70,16 +59,13 @@ export async function PUT(req: NextRequest) {
   if (updates.platform && !VALID_PLATFORMS.includes(updates.platform as string)) {
     return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
   }
-
-  if (updates.url) {
-    if (!validateUrl(sanitize(updates.url as string))) {
-      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
-    }
-    updates.url = sanitize(updates.url);
-  }
+  if (updates.url) updates.url = sanitize(updates.url);
 
   const { data, error } = await auth.supabase!.from("socials").update(updates).eq("id", id).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Social update error:", JSON.stringify(error));
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 

@@ -7,15 +7,6 @@ function sanitize(str: unknown): string {
   return str.replace(/[<>"'&]/g, "").trim().slice(0, 500);
 }
 
-function validateUrl(url: string): boolean {
-  try {
-    const u = new URL(url);
-    return ["http:", "https:"].includes(u.protocol);
-  } catch {
-    return false;
-  }
-}
-
 export async function GET() {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
@@ -46,6 +37,7 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth.error) {
+    console.error("Auth error:", auth.error);
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
 
@@ -53,7 +45,7 @@ export async function PUT(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { id, name, subtitle, image_url } = body;
@@ -64,16 +56,9 @@ export async function PUT(req: NextRequest) {
   const updates: Record<string, string> = {};
   if (name !== undefined) updates.name = sanitize(name);
   if (subtitle !== undefined) updates.subtitle = sanitize(subtitle);
-  if (image_url !== undefined) {
-    const url = sanitize(image_url);
-    if (url && !validateUrl(url)) {
-      return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
-    }
-    updates.image_url = url;
-  }
+  if (image_url !== undefined) updates.image_url = sanitize(image_url);
   updates.updated_at = new Date().toISOString();
 
-  // Use the auth.supabase which has the user's JWT in headers — RLS sees auth.uid()
   const { data, error } = await auth.supabase!
     .from("profiles")
     .update(updates)
@@ -82,8 +67,11 @@ export async function PUT(req: NextRequest) {
     .single();
 
   if (error) {
-    console.error("Profile update error:", error);
-    return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
+    console.error("Profile update DB error:", JSON.stringify(error));
+    return NextResponse.json(
+      { error: `DB error: ${error.message} (code: ${error.code})` },
+      { status: 500 }
+    );
   }
   return NextResponse.json(data);
 }

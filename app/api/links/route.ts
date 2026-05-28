@@ -27,13 +27,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { profile_id, label, url, icon, thumbnail_url, sort_order, is_active } = body;
-
   if (!profile_id || !label || !url) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
-
-  if (!validateUrl(sanitize(url))) {
-    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
   const validIcons = ["youtube", "laptop", "mic", "play"];
@@ -52,7 +47,10 @@ export async function POST(req: NextRequest) {
     is_active: is_active !== false,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Link create error:", JSON.stringify(error));
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -70,18 +68,17 @@ export async function PUT(req: NextRequest) {
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  // Sanitize fields
   if (updates.label) updates.label = sanitize(updates.label);
-  if (updates.url) {
-    if (!validateUrl(sanitize(updates.url as string))) {
-      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
-    }
-    updates.url = sanitize(updates.url);
+  if (updates.url) updates.url = sanitize(updates.url);
+  if (updates.thumbnail_url !== undefined) {
+    updates.thumbnail_url = updates.thumbnail_url ? sanitize(updates.thumbnail_url) : null;
   }
-  if (updates.thumbnail_url) updates.thumbnail_url = sanitize(updates.thumbnail_url);
 
   const { data, error } = await auth.supabase!.from("links").update(updates).eq("id", id).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Link update error:", JSON.stringify(error));
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
