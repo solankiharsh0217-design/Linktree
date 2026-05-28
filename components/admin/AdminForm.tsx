@@ -204,12 +204,18 @@ export default function AdminForm() {
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(session) },
-        body: JSON.stringify({ id: profile.id, name: profile.name, subtitle: profile.subtitle, image_url: profile.image_url }),
+        body: JSON.stringify({
+          id: profile.id,
+          name: profile.name,
+          subtitle: profile.subtitle,
+          image_url: profile.image_url,
+          selected_variant: profile.selected_variant || "cloud",
+        }),
       });
       const data = await res.json();
       if (data.error) setMessage(`Error: ${data.error}`);
       else setMessage("Profile saved!");
-    } catch { setMessage("Failed to save profile."); }
+    } catch (e) { setMessage(`Failed: ${e instanceof Error ? e.message : "unknown"}`); }
     setSaving(false);
   }, [profile, session]);
 

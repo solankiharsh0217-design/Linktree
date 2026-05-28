@@ -73,7 +73,7 @@ export default async function CloudPage() {
         </p>
 
         {/* Links */}
-        <div className="flex flex-col items-center w-full max-w-sm mt-10 sm:mt-12 gap-2.5 sm:gap-3">
+        <div className="flex flex-col items-center w-full max-w-sm mt-10 sm:mt-12 gap-2.5 sm:gap-3 overflow-visible">
           {mainLinks.map((link) => (
             <CloudButton key={link.id} link={link} />
           ))}

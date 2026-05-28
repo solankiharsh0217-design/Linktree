@@ -48,7 +48,7 @@ function LinkButton({
       className="group relative w-full animate-fade-in-up"
       style={{ animationDelay: delay, animationFillMode: "both" }}
     >
-      <div className="relative w-full bg-white/95 backdrop-blur-sm text-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center h-[5.5rem] px-6 gap-5 overflow-hidden">
+      <div className="relative w-full bg-white/95 backdrop-blur-sm text-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center h-[5.5rem] px-6 gap-5">
         {/* Logo / Icon */}
         <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
           {link.thumbnail_url ? (
@@ -146,7 +146,7 @@ export default async function AthleticPage() {
         </section>
 
         {/* Links */}
-        <section className="w-full flex-1 flex flex-col justify-center gap-3 my-3 overflow-y-auto no-scrollbar py-2">
+        <section className="w-full flex-1 flex flex-col justify-center gap-3 my-3 overflow-y-auto overflow-x-visible no-scrollbar py-2">
           {mainLinks.map((link, i) => (
             <LinkButton key={link.id} link={link} delay={`${0.15 + i * 0.1}s`} />
           ))}
