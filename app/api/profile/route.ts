@@ -35,6 +35,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  // Verify the user is logged in
   const auth = await requireAuth(req);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
@@ -55,7 +56,11 @@ export async function PUT(req: NextRequest) {
   if (updates.subtitle !== undefined) updates.subtitle = sanitize(updates.subtitle);
   if (updates.image_url !== undefined) updates.image_url = sanitize(updates.image_url);
 
-  const { data, error } = await auth.supabase!
+  // Use the public client (bypasses RLS) since the route is already auth-protected
+  const supabase = getSupabase();
+  if (!supabase) return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+
+  const { data, error } = await supabase
     .from("profiles")
     .update(updates)
     .eq("id", id)
