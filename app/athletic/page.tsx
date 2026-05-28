@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Music, Youtube, Twitter, Instagram, ArrowUpRight } from "lucide-react";
 import { getProfile } from "@/lib/data";
+import { DefaultLogoIcon } from "@/components/shared/Logos";
 import type { ProfileData } from "@/lib/types";
 
 const SOCIAL_ICONS: Record<string, React.ComponentType<Record<string, unknown>>> = {
@@ -41,60 +42,13 @@ function LinkButton({
   link: { id: string; label: string; url: string; icon?: string | null; thumbnail_url?: string | null; subtitle?: string };
   delay: string;
 }) {
-  // Default platform logos as inline SVGs
-  const defaultLogos: Record<string, { svg: React.ReactNode; bg: string }> = {
-    youtube: {
-      bg: "bg-red-600",
-      svg: (
-        <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7">
-          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-        </svg>
-      ),
-    },
-    laptop: {
-      bg: "bg-blue-600",
-      svg: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M2 17h20" />
-          <path d="M6 21h12" />
-          <path d="M10 21v-2" />
-          <path d="M14 21v-2" />
-        </svg>
-      ),
-    },
-    mic: {
-      bg: "bg-purple-600",
-      svg: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-          <line x1="12" x2="12" y1="19" y2="22" />
-        </svg>
-      ),
-    },
-    play: {
-      bg: "bg-green-600",
-      svg: (
-        <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7">
-          <polygon points="5,3 19,12 5,21" />
-        </svg>
-      ),
-    },
-  };
-
-  const iconData = link.icon ? defaultLogos[link.icon] : null;
-
   return (
     <a
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
       className="group relative w-full animate-fade-in-up"
-      style={{
-        animationDelay: delay,
-        animationFillMode: "both",
-      }}
+      style={{ animationDelay: delay, animationFillMode: "both" }}
     >
       <div
         className="relative w-full bg-white/95 backdrop-blur-sm text-black shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center h-[5.5rem] px-6 gap-5 overflow-hidden"
@@ -115,10 +69,8 @@ function LinkButton({
               height={56}
               className="w-full h-full object-cover"
             />
-          ) : iconData ? (
-            <div className={`w-full h-full ${iconData.bg} flex items-center justify-center`}>
-              {iconData.svg}
-            </div>
+          ) : link.icon ? (
+            <DefaultLogoIcon icon={link.icon} size="lg" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
               <span className="text-white text-xl font-bold">{link.label.charAt(0)}</span>
@@ -216,9 +168,7 @@ export default async function AthleticPage() {
             </div>
             <div className="relative flex items-center gap-3">
               <div className="w-1 h-1 rounded-full bg-white/20" />
-              <span className="text-[0.55rem] font-bold uppercase tracking-[0.5em] text-white/40">
-                Media
-              </span>
+              <span className="text-[0.55rem] font-bold uppercase tracking-[0.5em] text-white/40">Media</span>
               <div className="w-1 h-1 rounded-full bg-white/20" />
             </div>
           </div>
@@ -249,9 +199,7 @@ export default async function AthleticPage() {
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="w-12 h-[2px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent" />
-            <p className="text-[0.55rem] text-white/25 tracking-[0.5em] uppercase font-bold">
-              &copy; 2026
-            </p>
+            <p className="text-[0.55rem] text-white/25 tracking-[0.5em] uppercase font-bold">&copy; 2026</p>
           </div>
         </footer>
       </main>

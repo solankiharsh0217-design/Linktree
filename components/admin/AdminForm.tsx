@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Trash2, GripVertical, Save, Eye, LogOut, LogIn, Lock, Upload, X, Check } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, Eye, LogOut, LogIn, Lock, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
+import { DefaultLogoIcon, ICON_OPTIONS } from "@/components/shared/Logos";
 import type { ProfileData, Link as LinkType, Social } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
 
@@ -382,36 +383,74 @@ export default function AdminForm() {
 
           <div className="divide-y divide-gray-100">
             {profile.links.map((link) => (
-              <div key={link.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+              <div key={link.id} className="p-4 hover:bg-gray-50/50 transition-colors space-y-3">
+                {/* Top row: drag, preview, label, url, delete */}
                 <div className="flex gap-3">
                   <GripVertical className="w-4 h-4 text-gray-300 mt-1 flex-shrink-0 cursor-grab" />
-                  <ImageUploader
-                    url={link.thumbnail_url || ""}
-                    onUrlChange={(url) => updateLink(link.id, "thumbnail_url", url || null)}
-                    label={`${link.label} thumbnail`}
-                    session={session}
-                    size="sm"
-                  />
+
+                  {/* Preview: shows uploaded image OR default logo */}
+                  <div className="flex-shrink-0">
+                    {link.thumbnail_url ? (
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200">
+                        <img src={link.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ) : link.icon ? (
+                      <DefaultLogoIcon icon={link.icon} size="sm" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">?</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex-1 space-y-2 min-w-0">
                     <input type="text" value={link.label} onChange={(e) => updateLink(link.id, "label", e.target.value)} placeholder="Button text" className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                     <input type="url" value={link.url} onChange={(e) => updateLink(link.id, "url", e.target.value)} placeholder="https://..." className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
-                    <div className="flex items-center gap-2">
-                      <select value={link.icon || ""} onChange={(e) => updateLink(link.id, "icon", e.target.value || null)} className="border border-gray-200 rounded-md px-2 py-1 text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-                        <option value="">No icon</option>
-                        <option value="youtube">YouTube</option>
-                        <option value="laptop">Laptop</option>
-                        <option value="mic">Mic</option>
-                        <option value="play">Play</option>
-                      </select>
-                      <label className="flex items-center gap-1 text-[11px] text-gray-400">
-                        <input type="checkbox" checked={link.is_active} onChange={(e) => updateLink(link.id, "is_active", e.target.checked)} className="rounded border-gray-300" />
-                        Active
-                      </label>
-                    </div>
                   </div>
+
                   <button onClick={() => removeLink(link.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-1">
                     <Trash2 className="w-4 h-4" />
                   </button>
+                </div>
+
+                {/* Bottom row: image source choice */}
+                <div className="flex items-center gap-3 pl-7">
+                  {/* Custom image upload */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium w-12">Image</span>
+                    <ImageUploader
+                      url={link.thumbnail_url || ""}
+                      onUrlChange={(url) => updateLink(link.id, "thumbnail_url", url || null)}
+                      label={`${link.label} image`}
+                      session={session}
+                      size="sm"
+                    />
+                  </div>
+
+                  <div className="w-px h-6 bg-gray-200" />
+
+                  {/* Default logo picker */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium w-12">Logo</span>
+                    <select
+                      value={link.icon || ""}
+                      onChange={(e) => {
+                        const val = e.target.value || null;
+                        updateLink(link.id, "icon", val);
+                        // If picking a logo, clear uploaded image (optional — user can keep both)
+                      }}
+                      className="border border-gray-200 rounded-md px-2 py-1 text-[11px] bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    >
+                      {ICON_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <label className="flex items-center gap-1 text-[11px] text-gray-400 ml-auto">
+                    <input type="checkbox" checked={link.is_active} onChange={(e) => updateLink(link.id, "is_active", e.target.checked)} className="rounded border-gray-300" />
+                    Active
+                  </label>
                 </div>
               </div>
             ))}
