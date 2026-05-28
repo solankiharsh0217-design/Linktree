@@ -70,20 +70,17 @@ export default function AdminForm() {
     setLoginError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const supabase = getSupabaseBrowser();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await res.json();
-
-      if (data.error) {
-        setLoginError(data.error);
+      if (error) {
+        setLoginError(error.message);
         setLoginLoading(false);
       }
-      // Session will be set by onAuthStateChange listener, which triggers profile fetch
-      if (!data.error) setLoginLoading(false);
+      // Session will be set by onAuthStateChange listener → triggers profile fetch
     } catch {
       setLoginError("Network error. Try again.");
       setLoginLoading(false);
@@ -92,7 +89,6 @@ export default function AdminForm() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
       const supabase = getSupabaseBrowser();
       await supabase.auth.signOut();
     } catch {
