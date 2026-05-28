@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
+
+export const dynamic = "force-dynamic";
 
 function sanitize(str: unknown): string {
   if (typeof str !== "string") return "";
@@ -7,7 +10,6 @@ function sanitize(str: unknown): string {
 }
 
 export async function GET() {
-  const { createClient } = await import("@supabase/supabase-js");
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
@@ -42,6 +44,10 @@ export async function GET() {
   }
 }
 
+export async function POST(req: NextRequest) {
+  return PUT(req);
+}
+
 export async function PUT(req: NextRequest) {
   try {
     const auth = await requireAuth(req);
@@ -59,10 +65,10 @@ export async function PUT(req: NextRequest) {
     const { id } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const updates: Record<string, string> = {};
+    const updates: Record<string, string | null> = {};
     if (body.name !== undefined) updates.name = sanitize(body.name);
     if (body.subtitle !== undefined) updates.subtitle = sanitize(body.subtitle);
-    if (body.image_url !== undefined) updates.image_url = sanitize(body.image_url);
+    if (body.image_url !== undefined) updates.image_url = body.image_url ? sanitize(body.image_url) : null;
     if (body.selected_variant !== undefined) {
       const v = sanitize(body.selected_variant);
       updates.selected_variant = ["cloud", "athletic"].includes(v) ? v : "cloud";

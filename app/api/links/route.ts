@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 function sanitize(str: unknown): string {
   if (typeof str !== "string") return "";
   return str.replace(/[<>"'&]/g, "").trim().slice(0, 500);

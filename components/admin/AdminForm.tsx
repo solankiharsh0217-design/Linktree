@@ -202,7 +202,7 @@ export default function AdminForm() {
     setSaving(true); setMessage("");
     try {
       const res = await fetch("/api/profile", {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(session) },
         body: JSON.stringify({
           id: profile.id,
