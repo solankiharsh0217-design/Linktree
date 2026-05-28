@@ -3,6 +3,7 @@ export interface Profile {
   name: string;
   subtitle: string;
   image_url: string;
+  selected_variant: string;
   updated_at: string;
 }
 

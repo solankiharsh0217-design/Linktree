@@ -55,6 +55,10 @@ export async function PUT(req: NextRequest) {
   if (updates.name !== undefined) updates.name = sanitize(updates.name);
   if (updates.subtitle !== undefined) updates.subtitle = sanitize(updates.subtitle);
   if (updates.image_url !== undefined) updates.image_url = sanitize(updates.image_url);
+  if (updates.selected_variant !== undefined) {
+    const v = sanitize(updates.selected_variant);
+    updates.selected_variant = ["cloud", "athletic"].includes(v) ? v : "cloud";
+  }
 
   // Use the public client (bypasses RLS) since the route is already auth-protected
   const supabase = getSupabase();

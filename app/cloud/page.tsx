@@ -18,6 +18,7 @@ const FALLBACK: ProfileData = {
   name: "Marjan van Aubel",
   subtitle: "Portfolio reviews, interview tips, and career advice",
   image_url: "https://picsum.photos/id/1027/240/240",
+  selected_variant: "cloud",
   updated_at: "",
   links: [
     { id: "l1", profile_id: "1", label: "Check out my latest video", url: "#", icon: null, thumbnail_url: "https://picsum.photos/id/119/88/88", sort_order: 1, is_active: true },

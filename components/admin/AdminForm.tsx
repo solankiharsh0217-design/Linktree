@@ -369,6 +369,54 @@ export default function AdminForm() {
           </div>
         </section>
 
+        {/* ===== VARIANT SELECTOR ===== */}
+        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-800 text-sm">Active Variant</h2>
+            <button onClick={saveProfile} disabled={saving} className="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50">
+              {saving ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-3 h-3" />} Save
+            </button>
+          </div>
+          <div className="p-5">
+            <p className="text-xs text-gray-400 mb-3">Choose which variant visitors see at your site root.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setProfile({ ...profile, selected_variant: "cloud" })}
+                className={`relative p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                  profile.selected_variant === "cloud"
+                    ? "border-indigo-600 bg-indigo-50 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                {profile.selected_variant === "cloud" && (
+                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                )}
+                <div className="font-semibold text-sm text-gray-800">Cloud Outline</div>
+                <div className="text-[11px] text-gray-400 mt-1">Clean white with indigo accents</div>
+              </button>
+
+              <button
+                onClick={() => setProfile({ ...profile, selected_variant: "athletic" })}
+                className={`relative p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+                  profile.selected_variant === "athletic"
+                    ? "border-indigo-600 bg-indigo-50 shadow-sm"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                {profile.selected_variant === "athletic" && (
+                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                )}
+                <div className="font-semibold text-sm text-gray-800">Athletic Dark</div>
+                <div className="text-[11px] text-gray-400 mt-1">Full-screen background with bold typography</div>
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* ===== LINKS SECTION ===== */}
         <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">

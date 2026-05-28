@@ -17,6 +17,7 @@ const FALLBACK: ProfileData = {
   name: "DENA PRESLEY",
   subtitle: "Long Distance Runner",
   image_url: "https://picsum.photos/id/1005/240/240",
+  selected_variant: "athletic",
   updated_at: "",
   links: [
     { id: "l1", profile_id: "1", label: "Latest Video", subtitle: "Training Secrets Revealed", url: "#", icon: "youtube", thumbnail_url: "https://picsum.photos/id/119/88/88", sort_order: 1, is_active: true },
@@ -33,7 +34,7 @@ const FALLBACK: ProfileData = {
 };
 
 const SCALLOP_MASK =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q 2.5 0 5 15 T 10 15 T 15 15 T 20 15 T 25 15 T 30 15 T 35 15 T 40 15 T 45 15 T 50 15 T 55 15 T 60 15 T 65 15 T 70 15 T 75 15 T 80 15 T 85 15 T 90 15 T 95 15 T 100 15 V 85 Q 97.5 100 95 85 T 90 85 T 85 85 T 80 85 T 75 85 T 70 85 T 65 85 T 60 85 T 55 85 T 50 85 T 45 85 T 40 85 T 35 85 T 30 85 T 25 85 T 20 85 T 15 85 T 10 85 T 5 85 T 0 85 Z' fill='black'/%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 8 Q 2.5 4 5 8 T 10 8 T 15 8 T 20 8 T 25 8 T 30 8 T 35 8 T 40 8 T 45 8 T 50 8 T 55 8 T 60 8 T 65 8 T 70 8 T 75 8 T 80 8 T 85 8 T 90 8 T 95 8 T 100 8 V 92 Q 97.5 96 95 92 T 90 92 T 85 92 T 80 92 T 75 92 T 70 92 T 65 92 T 60 92 T 55 92 T 50 92 T 45 92 T 40 92 T 35 92 T 30 92 T 25 92 T 20 92 T 15 92 T 10 92 T 5 92 T 0 92 Z' fill='black'/%3E%3C/svg%3E";
 
 function LinkButton({
   link,
