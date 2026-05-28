@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/supabase-server";
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,8 @@ export async function PUT(req: NextRequest) {
       console.error("Profile update error:", JSON.stringify(error));
       return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
     }
+
+    revalidatePath("/");
     return NextResponse.json(data);
   } catch (e) {
     console.error("Profile PUT crash:", e);

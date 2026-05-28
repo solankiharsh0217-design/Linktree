@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/supabase-server";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
     }).select().single();
 
     if (error) return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+    revalidatePath("/");
     return NextResponse.json(data);
   } catch (e) {
     return NextResponse.json({ error: `Server error: ${e instanceof Error ? e.message : "unknown"}` }, { status: 500 });
@@ -49,6 +51,7 @@ export async function PUT(req: NextRequest) {
 
     const { data, error } = await auth.supabase.from("links").update(updates).eq("id", id).select().single();
     if (error) return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
+    revalidatePath("/");
     return NextResponse.json(data);
   } catch (e) {
     return NextResponse.json({ error: `Server error: ${e instanceof Error ? e.message : "unknown"}` }, { status: 500 });
@@ -66,6 +69,7 @@ export async function DELETE(req: NextRequest) {
 
     const { error } = await auth.supabase.from("links").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidatePath("/");
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: `Server error: ${e instanceof Error ? e.message : "unknown"}` }, { status: 500 });
